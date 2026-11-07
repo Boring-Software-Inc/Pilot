@@ -15,7 +15,14 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+      - name: Keep generated output out of contributions
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: git diff --exit-code "$BASE" -- snapshot.json
       - run: node scripts/snapshot.mjs
+      - run: node --test scripts/snapshot.test.mjs
