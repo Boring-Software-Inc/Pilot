@@ -4,7 +4,7 @@
 - [ ] Correct or remove an entry
 
 GitHub username or profile URL:
-Expiry (UTC):
+Expiry (optional, UTC): Leave blank for a permanent listing. For a temporary listing, use a timestamp such as `2027-01-31T00:00:00Z`.
 Public reason:
 
 ## Evidence

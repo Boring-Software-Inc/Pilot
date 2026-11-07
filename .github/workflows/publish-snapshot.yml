@@ -22,7 +22,7 @@ on:
         description: Public reason
         type: string
       expiresAt:
-        description: ISO-8601 UTC expiry
+        description: Optional UTC expiry (blank keeps the entry active until removed)
         type: string
 
 permissions:
