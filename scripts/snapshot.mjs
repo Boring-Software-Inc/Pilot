@@ -9,12 +9,17 @@ const iso = (value) =>
 	Number.isFinite(Date.parse(value));
 
 function validateEntry(entry) {
-	assert.deepEqual(Object.keys(entry).sort(), ["accountId", "expiresAt", "login", "reason"]);
+	assert.deepEqual(Object.keys(entry).filter((key) => key !== "expiresAt").sort(), ["accountId", "login", "reason"]);
 	assert.ok(typeof entry.accountId === "string" && /^[1-9][0-9]*$/.test(entry.accountId), "Invalid account ID");
 	assert.ok(typeof entry.login === "string" && /^[a-z\d](?:[a-z\d-]{0,98}[a-z\d])?$/i.test(entry.login), "Invalid GitHub login");
 	assert.ok(typeof entry.reason === "string" && entry.reason === entry.reason.trim() && entry.reason.length > 0 && entry.reason.length <= 300, "Invalid public reason");
-	assert.ok(iso(entry.expiresAt), "Invalid expiry");
-	return entry;
+	const expiresAt = entry.expiresAt ?? null;
+	assert.ok(expiresAt === null || iso(expiresAt), "Invalid expiry");
+	return { ...entry, expiresAt };
+}
+
+function isActive(entry) {
+	return entry !== undefined && (entry.expiresAt === null || Date.parse(entry.expiresAt) > now);
 }
 
 function readEntries(directory) {
@@ -44,10 +49,10 @@ if (output) {
 			accountId: inputs.accountId,
 			login: inputs.login,
 			reason: inputs.reason,
-			expiresAt: inputs.expiresAt,
+			expiresAt: inputs.expiresAt || null,
 		});
-		assert.ok(Date.parse(entry.expiresAt) > now, "Expiry must be in the future");
-		assert.ok(![community, staff].some((entries) => Date.parse(entries.get(entry.accountId)?.expiresAt) > now), "Account already has an active entry");
+		assert.ok(isActive(entry), "Expiry must be in the future");
+		assert.ok(![community, staff].some((entries) => isActive(entries.get(entry.accountId))), "Account already has an active entry");
 		staff.set(entry.accountId, entry);
 		writeFileSync(join(staffDirectory, `${entry.accountId}.json`), JSON.stringify(entry, null, 2) + "\n");
 	} else if (inputs?.operation === "remove") {
@@ -58,7 +63,7 @@ if (output) {
 	}
 	const entries = new Map();
 	for (const entry of [...staff.values(), ...community.values()]) {
-		if (Date.parse(entry.expiresAt) > now) entries.set(entry.accountId, entry);
+		if (isActive(entry)) entries.set(entry.accountId, entry);
 	}
 	assert.ok(entries.size <= 10_000, "Too many active entries");
 	const snapshotPath = join(output, "snapshot.json");
