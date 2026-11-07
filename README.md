@@ -4,7 +4,7 @@
 
 A public list of GitHub accounts reported for spam and reviewed by maintainers.
 
-[Browse the list](https://staging.tripwire.sh/blocklist) · [JSON snapshot](https://raw.githubusercontent.com/Boring-Software-Inc/Pilot/published/snapshot.json) · [Raw usernames](https://staging.tripwire.sh/api/blocklist?format=txt)
+[Browse the list](https://staging.tripwire.sh/pilot) · [JSON snapshot](https://raw.githubusercontent.com/Boring-Software-Inc/Pilot/published/snapshot.json) · [Raw usernames](https://staging.tripwire.sh/api/blocklist?format=txt)
 
 ## Suggest an account
 
@@ -16,7 +16,7 @@ Keep private evidence out of public issues. Being a bot or having a new account 
 
 ## Appeal a block
 
-1. Choose **Appeal a block** on the [list page](https://staging.tripwire.sh/blocklist).
+1. Choose **Appeal a block** on the [list page](https://staging.tripwire.sh/pilot).
 2. Share the GitHub username or profile URL and explain what should change.
 
 ## Publish a change
