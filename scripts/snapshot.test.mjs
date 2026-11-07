@@ -13,7 +13,7 @@ test("publishes reviewed and staff entries, rejects duplicates and honors expiry
 	const write = (path, data) => writeFileSync(join(cwd, path), JSON.stringify(data));
 	write("published/snapshot.json", { version: 1, revision: 1, entries: [] });
 	const reviewed = { accountId: "10", login: "test-community", reason: "Fixture", expiresAt: "2099-01-01T00:00:00Z" };
-	const staff = { ...reviewed, accountId: "20", login: "test-staff" };
+	const staff = { ...reviewed, accountId: "20", login: "test-staff", expiresAt: null };
 	write("entries/10.json", reviewed);
 	write("entries/30.json", { ...reviewed, accountId: "30", expiresAt: "2000-01-01T00:00:00Z" });
 	const publish = (inputs) => {
@@ -26,9 +26,9 @@ test("publishes reviewed and staff entries, rejects duplicates and honors expiry
 		return JSON.parse(readFileSync(join(cwd, "published/snapshot.json"), "utf8"));
 	};
 	assert.deepEqual(publish().entries, [reviewed]);
-	const added = publish({ ...staff, operation: "add" });
+	const added = publish({ ...staff, expiresAt: "", operation: "add" });
 	assert.equal(added.revision, 3);
 	assert.deepEqual(added.entries, [reviewed, staff]);
-	assert.throws(() => publish({ ...staff, operation: "add" }), /Account already has an active entry/);
+	assert.throws(() => publish({ ...staff, expiresAt: "", operation: "add" }), /Account already has an active entry/);
 	assert.deepEqual(publish({ operation: "remove", accountId: staff.accountId }).entries, [reviewed]);
 });
