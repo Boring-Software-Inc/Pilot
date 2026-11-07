@@ -1,4 +1,4 @@
-![Tripwire Shared Spam Blocklist](./assets/blocklist-banner.png)
+![Tripwire / Pilot](./assets/blocklist-banner.png)
 
 # Pilot
 
