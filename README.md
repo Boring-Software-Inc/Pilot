@@ -1,15 +1,29 @@
-# Tripwire shared spam blocklist
+![Tripwire Shared Spam Blocklist](./assets/blocklist-banner.png)
 
-This list supports Tripwire's opt-in review pilot. When a pull request matches an active entry, Tripwire sends it to a maintainer for review.
+# Pilot
 
-## Suggest an addition or correction
+A public list of GitHub accounts reported for spam and reviewed by maintainers.
 
-[Suggest an account](../../issues/new?title=Suggest%20an%20account) with its GitHub username or profile URL, a short description of what happened, and any public evidence. Keep sensitive material private. An automated or unfamiliar account is insufficient evidence on its own.
+[Browse the list](https://staging.tripwire.sh/blocklist) · [JSON snapshot](https://raw.githubusercontent.com/Boring-Software-Inc/Pilot/published/snapshot.json) · [Raw usernames](https://staging.tripwire.sh/api/blocklist?format=txt)
 
-A maintainer verifies the report and can publish through Tripwire Admin, which looks up the numeric GitHub account ID. Maintainers can also open a direct PR editing `entries/<accountId>.json` with the string fields `accountId`, `login`, and `reason` (up to 300 characters for public display). Omit `expiresAt` to keep an entry active until it is removed. For a temporary listing, set `expiresAt` to a UTC timestamp such as `2027-01-31T00:00:00Z`. The published snapshot uses `null` for entries with no expiry.
+## Suggest an account
 
-To appeal an entry, contact a maintainer privately or open an issue without sensitive details. Community entries can be removed by pull request. Maintainers can remove Tripwire admin entries by running the **Publish blocklist** workflow with `operation: remove` and the account ID.
+1. [Open a report on GitHub](../../issues/new?title=Suggest%20an%20account).
+2. Add the GitHub username or profile URL. Describe the spam and link to public examples, such as pull requests or comments.
+3. Submit the report. A maintainer reviews the evidence before adding an account.
 
-## Publication
+Keep private evidence out of public issues. Being a bot or having a new account is insufficient on its own.
 
-After a change merges to `main`, GitHub Actions combines the reviewed entries with additions made by Tripwire platform admins and publishes [snapshot.json](../../blob/published/snapshot.json) on the `published` branch. Admin additions also appear in [staff-entries](../../tree/published/staff-entries) when present. The workflow refreshes the snapshot daily and leaves out expired entries. Tripwire stops using a snapshot if it is seven days old.
+## Appeal a block
+
+1. Choose **Appeal a block** on the [list page](https://staging.tripwire.sh/blocklist).
+2. Share the GitHub username or profile URL and explain what should change.
+
+## Publish a change
+
+- Verify the account and the evidence. Add it through Tripwire Admin or submit a PR under [`entries/`](./entries).
+- Use the numeric GitHub ID as the filename. Include `accountId`, `login`, and a public `reason` of up to 300 characters.
+- Omit `expiresAt` for a permanent entry. For a temporary entry, set a UTC timestamp such as `2027-01-31T00:00:00Z`.
+- Remove community entries by PR. Remove admin entries with the [Publish blocklist workflow](../../actions/workflows/publish-snapshot.yml) using `operation: remove` and the account ID.
+
+GitHub Actions republishes the snapshot after a merge and refreshes it daily. Tripwire's opt-in pilot sends matching pull requests to Human review.
