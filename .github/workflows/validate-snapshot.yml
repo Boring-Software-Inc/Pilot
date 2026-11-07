@@ -1,0 +1,56 @@
+name: Validate snapshot
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Validate public snapshot
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from "node:assert/strict";
+          import { readFileSync } from "node:fs";
+          import { execFileSync } from "node:child_process";
+          const iso = (value) => typeof value === "string" && /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/.test(value) && Number.isFinite(Date.parse(value));
+          const snapshot = JSON.parse(readFileSync("snapshot.json", "utf8"));
+          assert.deepEqual(Object.keys(snapshot).sort(), ["entries", "publishedAt", "revision", "version"]);
+          assert.equal(snapshot.version, 1);
+          assert.ok(Number.isSafeInteger(snapshot.revision) && snapshot.revision > 0);
+          assert.ok(iso(snapshot.publishedAt));
+          assert.ok(Array.isArray(snapshot.entries) && snapshot.entries.length <= 10_000);
+          const ids = new Set();
+          for (const entry of snapshot.entries) {
+            assert.deepEqual(Object.keys(entry).sort(), ["accountId", "expiresAt", "login", "reason"]);
+            assert.ok(typeof entry.accountId === "string" && /^[1-9][0-9]*$/.test(entry.accountId));
+            assert.ok(!ids.has(entry.accountId), "Duplicate account ID");
+            ids.add(entry.accountId);
+            assert.ok(typeof entry.login === "string" && entry.login.length > 0 && entry.login.length <= 100);
+            assert.ok(typeof entry.reason === "string" && entry.reason.trim().length > 0 && entry.reason.trim().length <= 300);
+            assert.ok(iso(entry.expiresAt));
+          }
+          if (process.env.BASE) {
+            const previous = JSON.parse(execFileSync("git", ["show", process.env.BASE + ":snapshot.json"], {encoding: "utf8"}));
+            if (JSON.stringify(snapshot) !== JSON.stringify(previous)) {
+              assert.ok(snapshot.revision > previous.revision, "Advance the snapshot revision");
+              assert.ok(Date.parse(snapshot.publishedAt) > Date.parse(previous.publishedAt), "Advance the publication time");
+              const age = Date.now() - Date.parse(snapshot.publishedAt);
+              assert.ok(age >= 0 && age < 7 * 86400_000, "Publish a fresh snapshot");
+              assert.ok(snapshot.entries.every((entry) => Date.parse(entry.expiresAt) > Date.now()), "Remove expired entries");
+            }
+          }
+          JS
