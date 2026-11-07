@@ -7,6 +7,11 @@ on:
     - cron: "23 8 * * *"
   workflow_dispatch:
     inputs:
+      target:
+        description: Snapshot to publish
+        type: choice
+        options: [production, staging]
+        default: production
       operation:
         description: Staff entry operation
         type: choice
@@ -28,14 +33,18 @@ on:
 permissions:
   contents: write
 
-concurrency:
-  group: blocklist-publisher
-  queue: max
-
 jobs:
   publish:
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/main' && (github.event_name != 'workflow_dispatch' || inputs.target == 'production' || inputs.target == 'staging')
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(github.event_name != 'workflow_dispatch' && '["production","staging"]' || (inputs.target == 'staging' && '["staging"]' || '["production"]')) }}
+    environment: ${{ matrix.target }}
+    concurrency:
+      group: blocklist-publisher-${{ matrix.target }}
+      queue: max
     steps:
       - uses: actions/checkout@v4
         with:
@@ -44,9 +53,11 @@ jobs:
         with:
           node-version: 24
       - name: Update the published branch
+        env:
+          SNAPSHOT_BRANCH: ${{ matrix.target == 'staging' && 'published-staging' || 'published' }}
         run: |
-          if git ls-remote --exit-code origin refs/heads/published; then
-            git fetch origin refs/heads/published
+          if git ls-remote --exit-code origin "refs/heads/$SNAPSHOT_BRANCH"; then
+            git fetch origin "refs/heads/$SNAPSHOT_BRANCH"
             git worktree add --detach "$RUNNER_TEMP/published" FETCH_HEAD
           else
             git worktree add --detach "$RUNNER_TEMP/published" HEAD
@@ -57,4 +68,4 @@ jobs:
           git -C "$RUNNER_TEMP/published" config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git -C "$RUNNER_TEMP/published" add snapshot.json staff-entries
           git -C "$RUNNER_TEMP/published" commit -m "Publish blocklist ($GITHUB_RUN_ID)"
-          git -C "$RUNNER_TEMP/published" push origin HEAD:refs/heads/published
+          git -C "$RUNNER_TEMP/published" push origin "HEAD:refs/heads/$SNAPSHOT_BRANCH"
