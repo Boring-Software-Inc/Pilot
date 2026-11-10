@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "revision": 14,
-  "publishedAt": "2026-11-09T19:06:10.586Z",
+  "revision": 15,
+  "publishedAt": "2026-11-10T03:36:24.384Z",
   "entries": [
     {
       "accountId": "100349704",
@@ -229,6 +229,12 @@
       "accountId": "124437015",
       "login": "YuQ1e",
       "reason": "1 PR in a simulated bounty study.",
+      "expiresAt": null
+    },
+    {
+      "accountId": "124637141",
+      "login": "g-r-i-m",
+      "reason": "test",
       "expiresAt": null
     },
     {
